@@ -54,7 +54,7 @@ public class RssPollingService {
         String content = entry.getContents().isEmpty() ? description :
                 entry.getContents().get(0).getValue();
 
-        // Extract image URL from content if available (simplified)
+        // Extract image URL from content 
         String imageUrl = extractImageUrl(content);
 
         return ArticleDto.builder()
@@ -73,8 +73,6 @@ public class RssPollingService {
     }
 
     private String extractImageUrl(String content) {
-        // Simple regex to extract image URL from HTML content
-        // This is a simplified approach; a proper HTML parser would be better
         if (content == null) return null;
 
         // Look for img tags and extract src attribute
