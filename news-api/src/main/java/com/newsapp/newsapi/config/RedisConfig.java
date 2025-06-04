@@ -25,7 +25,6 @@ public class RedisConfig {
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
-        System.out.println("Inside redisConnectionFactory*****.."+config);
         return new LettuceConnectionFactory(config);
     }
 
@@ -35,7 +34,7 @@ public class RedisConfig {
         template.setConnectionFactory(redisConnectionFactory());
         template.setKeySerializer(new StringRedisSerializer());
 
-        // Configure Jackson serializer to handle Java 8 date/time types
+        // Configure Jackson serializer
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
 
@@ -44,7 +43,7 @@ public class RedisConfig {
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(serializer);
 
-        System.out.println("Inside redisTemplate*******.."+template.toString());
+        
 
         return template;
     }
