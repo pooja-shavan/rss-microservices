@@ -28,42 +28,28 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        if (redisHost == null || redisHost.isEmpty()) {
-            log.error("Redis host is not configured");
-            throw new IllegalArgumentException("Redis host must be set");
-        }
-        if (redisPort <= 0) {
-            log.error("Invalid Redis port: {}", redisPort);
-            throw new IllegalArgumentException("Redis port must be a positive integer");
-        }
-        try {
-            RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
-            return new LettuceConnectionFactory(config);
-        } catch (Exception e) {
-            log.error("Failed to create RedisConnectionFactory", e);
-            throw e;
-        }
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
+        System.out.println("Inside redisConnectionFactory*****.."+config);
+        return new LettuceConnectionFactory(config);
     }
 
     @Bean
     public RedisTemplate<String, ArticleDto> redisTemplate() {
-        try {
-            RedisTemplate<String, ArticleDto> template = new RedisTemplate<>();
-            template.setConnectionFactory(redisConnectionFactory());
-            template.setKeySerializer(new StringRedisSerializer());
+        RedisTemplate<String, ArticleDto> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisConnectionFactory());
+        template.setKeySerializer(new StringRedisSerializer());
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
+        // Configure Jackson serializer to handle Java 8 date/time types
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
 
-            Jackson2JsonRedisSerializer<ArticleDto> serializer = new Jackson2JsonRedisSerializer<>(mapper, ArticleDto.class);
-            template.setValueSerializer(serializer);
-            template.setHashKeySerializer(new StringRedisSerializer());
-            template.setHashValueSerializer(serializer);
+        Jackson2JsonRedisSerializer<ArticleDto> serializer = new Jackson2JsonRedisSerializer<>(mapper, ArticleDto.class);
+        template.setValueSerializer(serializer);
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(serializer);
 
-            return template;
-        } catch (Exception e) {
-            log.error("Failed to configure RedisTemplate", e);
-            throw e;
-        }
+        System.out.println("Inside redisTemplate*******.."+template.toString());
+
+        return template;
     }
 }
