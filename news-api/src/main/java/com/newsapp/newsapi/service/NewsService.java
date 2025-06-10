@@ -5,6 +5,8 @@ import com.newsapp.newsapi.model.Language;
 
 import com.newsapp.newsapi.model.NewsResponse;
 import com.newsapp.rssproducer.model.ArticleDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class NewsService {
+
+    private static final Logger log = LoggerFactory.getLogger(NewsService.class);
 
     private final RedisTemplate<String, ArticleDto> redisTemplate;
 

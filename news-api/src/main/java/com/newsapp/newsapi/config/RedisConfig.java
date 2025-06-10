@@ -3,6 +3,8 @@ package com.newsapp.newsapi.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.newsapp.rssproducer.model.ArticleDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +18,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(RedisConfig.class);
+
     @Value("${spring.redis.host}")
     private String redisHost;
 
@@ -24,28 +28,42 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
-        System.out.println("Inside redisConnectionFactory*****.."+config);
-        return new LettuceConnectionFactory(config);
+        if (redisHost == null || redisHost.isEmpty()) {
+            log.error("Redis host is not configured");
+            throw new IllegalArgumentException("Redis host must be set");
+        }
+        if (redisPort <= 0) {
+            log.error("Invalid Redis port: {}", redisPort);
+            throw new IllegalArgumentException("Redis port must be a positive integer");
+        }
+        try {
+            RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
+            return new LettuceConnectionFactory(config);
+        } catch (Exception e) {
+            log.error("Failed to create RedisConnectionFactory", e);
+            throw e;
+        }
     }
 
     @Bean
     public RedisTemplate<String, ArticleDto> redisTemplate() {
-        RedisTemplate<String, ArticleDto> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory());
-        template.setKeySerializer(new StringRedisSerializer());
+        try {
+            RedisTemplate<String, ArticleDto> template = new RedisTemplate<>();
+            template.setConnectionFactory(redisConnectionFactory());
+            template.setKeySerializer(new StringRedisSerializer());
 
-        // Configure Jackson serializer to handle Java 8 date/time types
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
 
-        Jackson2JsonRedisSerializer<ArticleDto> serializer = new Jackson2JsonRedisSerializer<>(mapper, ArticleDto.class);
-        template.setValueSerializer(serializer);
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(serializer);
+            Jackson2JsonRedisSerializer<ArticleDto> serializer = new Jackson2JsonRedisSerializer<>(mapper, ArticleDto.class);
+            template.setValueSerializer(serializer);
+            template.setHashKeySerializer(new StringRedisSerializer());
+            template.setHashValueSerializer(serializer);
 
-        System.out.println("Inside redisTemplate*******.."+template.toString());
-
-        return template;
+            return template;
+        } catch (Exception e) {
+            log.error("Failed to configure RedisTemplate", e);
+            throw e;
+        }
     }
 }

@@ -7,6 +7,7 @@ import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,6 +34,8 @@ public class RssPollingService {
 
     @Scheduled(fixedRateString = "${rss.polling.interval-ms: 300000}")
     public void pollRssFeed() {
+        String pollId = UUID.randomUUID().toString();
+        MDC.put("pollId", pollId);
         try {
             log.info("Polling RSS feed from {}", rssUrl);
             URL feedUrl = new URL(rssUrl);
@@ -46,6 +49,8 @@ public class RssPollingService {
             log.info("Completed RSS polling. Processed {} entries", feed.getEntries().size());
         } catch (Exception e) {
             log.error("Error polling RSS feed: {}", e.getMessage(), e);
+        }finally {
+            MDC.remove("pollId");
         }
     }
 
@@ -73,8 +78,7 @@ public class RssPollingService {
     }
 
     private String extractImageUrl(String content) {
-        // Simple regex to extract image URL from HTML content
-        // This is a simplified approach; a proper HTML parser would be better
+
         if (content == null) return null;
 
         // Look for img tags and extract src attribute
